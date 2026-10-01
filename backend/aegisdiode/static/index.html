@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisDiode — Passive Threat Correlation for Unidirectional Networks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #090d16;
+            --bg-card: rgba(19, 27, 46, 0.7);
+            --bg-card-hover: rgba(26, 37, 63, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(59, 130, 246, 0.3);
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --radius: 12px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
+            background-attachment: fixed;
+            line-height: 1.5;
+        }
+
+        /* Top Navigation Header */
+        header {
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-emerald);
+            box-shadow: 0 0 10px var(--accent-emerald);
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .sih-badge {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--accent-blue);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Layout Grid */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.75rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Top Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            border-color: var(--border-highlight);
+            transform: translateY(-2px);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent-blue)), transparent);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.825rem;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            margin: 0.5rem 0 0.25rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+        }
+
+        .metric-footer {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* Demo Controls Panel */
+        .control-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+        }
+
+        .control-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .attack-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.55rem 1.1rem;
+            border-radius: 8px;
+            font-size: 0.825rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            border: none;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fde047;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-warning:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        .btn-purple {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-purple:hover {
+            background: rgba(139, 92, 246, 0.25);
+        }
+
+        /* Two-Column Content Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .panel-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Incidents List & Cards */
+        .incident-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        .incident-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: var(--transition);
+        }
+
+        .incident-card:hover {
+            border-color: var(--border-highlight);
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        .incident-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .incident-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #ffffff;
+        }
+
+        .severity-badge {
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.725rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .severity-Critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .severity-High {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .severity-Medium {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .severity-Low {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .incident-body {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .alert-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.4rem;
+        }
+
+        .alert-tag {
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+
+        .incident-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Chart Canvas */
+        .chart-container {
+            width: 100%;
+            height: 220px;
+            position: relative;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Data Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.825rem;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.785rem;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Alert Stream Feed */
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .feed-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0.85rem;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.5);
+            border-left: 3px solid var(--accent-blue);
+            font-size: 0.8rem;
+        }
+
+        .feed-item.iat { border-left-color: var(--accent-cyan); }
+        .feed-item.size { border-left-color: var(--accent-purple); }
+        .feed-item.entropy { border-left-color: var(--accent-amber); }
+        .feed-item.rate { border-left-color: var(--accent-red); }
+
+        .feed-time {
+            color: var(--text-dim);
+            font-size: 0.725rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-highlight);
+            color: #fff;
+            padding: 0.85rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🛡️</div>
+            <div class="brand-text">
+                <h1>AegisDiode</h1>
+                <p>Passive Threat Correlation for Unidirectional Networks</p>
+            </div>
+        </div>
+        <div class="header-controls">
+            <span class="sih-badge">SIH26145 • HEXAGONAL HIVE</span>
+            <div class="status-badge" id="ws-status">
+                <div class="pulse-dot"></div>
+                <span>LIVE TELEMETRY</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Metrics Overview Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card" style="--card-accent: var(--accent-blue);">
+                <div class="metric-header">
+                    <span>ACTIVE FLOWS</span>
+                    <span>🌐</span>
+                </div>
+                <div class="metric-value" id="stat-active-flows">0</div>
+                <div class="metric-footer">Observation Flows Tracked</div>
+            </div>
+
+            <div class="metric-card" style="--card-accent: var(--accent-cyan);">
+                <div class="metric-header">
+                    <span>PACKET THROUGHPUT</span>
+                    <span>⚡</span>
+                </div>
+                <div class="metric-value" id="stat-pps">0 /s</div>
+                <div class="metric-footer" id="stat-total-packets">0 Packets Processed</div>
+            </div>
+
+            <div class="metric-card" style="--card-accent: var(--accent-amber);">
+                <div class="metric-header">
+                    <span>SINGLE ALERTS</span>
+                    <span>⚠️</span>
+                </div>
+                <div class="metric-value" id="stat-total-alerts">0</div>
+                <div class="metric-footer">Statistical Anomaly Signals</div>
+            </div>
+
+            <div class="metric-card" style="--card-accent: var(--accent-red);">
+                <div class="metric-header">
+                    <span>CORRELATED INCIDENTS</span>
+                    <span>🚨</span>
+                </div>
+                <div class="metric-value" id="stat-incidents">0</div>
+                <div class="metric-footer">Multi-Signal Threat Events</div>
+            </div>
+        </div>
+
+        <!-- Interactive Demo Control Bar -->
+        <div class="control-panel">
+            <div class="control-title">
+                <span>🎮 Demo Controls & Attack Injection:</span>
+            </div>
+            <div class="attack-buttons">
+                <button class="btn btn-primary" id="btn-toggle-sim" onclick="toggleSimulation()">
+                    <span id="sim-icon">▶</span> <span id="sim-label">Start Traffic</span>
+                </button>
+                <button class="btn btn-danger" onclick="injectAttack('port_scan')">
+                    🔍 Port Scan
+                </button>
+                <button class="btn btn-purple" onclick="injectAttack('data_exfil')">
+                    📦 High-Entropy Exfil
+                </button>
+                <button class="btn btn-warning" onclick="injectAttack('dos_flood')">
+                    🌊 DoS Traffic Flood
+                </button>
+                <button class="btn" onclick="injectAttack('beaconing')">
+                    📡 C2 Beaconing
+                </button>
+                <button class="btn" onclick="injectAttack('slow_poison')">
+                    🧪 Baseline Poisoning
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard 2-Column Grid -->
+        <div class="dashboard-grid">
+
+            <!-- Left Column: Incidents Timeline & Flow Table -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                <!-- Correlated Threat Incidents -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span>🚨 Correlated Threat Incidents</span>
+                            <span class="panel-badge" id="incidents-count-badge">0 Active</span>
+                        </div>
+                    </div>
+                    <div class="incident-list" id="incidents-list">
+                        <div style="color: var(--text-dim); text-align: center; padding: 2rem; font-size: 0.85rem;">
+                            No incidents detected yet. Inject an attack above to trigger multi-signal correlation!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-Time Throughput Graph -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span>📈 Network Traffic & Alert Rate</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="throughputChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Active Observation Flows Table -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span>🔍 Active Flow Table</span>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>5-Tuple Flow Key</th>
+                                    <th>Proto</th>
+                                    <th>Packets</th>
+                                    <th>Bytes</th>
+                                    <th>State</th>
+                                </tr>
+                            </thead>
+                            <tbody id="flows-table-body">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
+                                        Waiting for flow telemetry...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Live Anomaly Stream & Drift Rejection Health -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                <!-- Anomaly Signal Stream -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span>⚡ Live Anomaly Signals</span>
+                            <span class="panel-badge">Single-Detector</span>
+                        </div>
+                    </div>
+                    <div class="feed-list" id="alerts-feed">
+                        <div style="color: var(--text-dim); text-align: center; padding: 2rem; font-size: 0.85rem;">
+                            Monitoring statistical detectors...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Baseline Anti-Poisoning Health -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span>🛡️ Anti-Poison Baseline Engine</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.825rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: 8px;">
+                            <span>Drift Filter Strategy:</span>
+                            <strong style="color: var(--accent-emerald);">MAD Median Filter (3.0σ)</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: 8px;">
+                            <span>Baseline Poison Attempts Blocked:</span>
+                            <strong style="color: var(--accent-purple);" id="baseline-rejections">0 Updates Rejected</strong>
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-dim);">
+                            Prevents slow baseline shift attacks by evaluating candidates against robust median absolute deviation before updating EWMA statistics.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Script Layer -->
+    <script>
+        // State variables
+        let isSimulating = false;
+        let ws = null;
+        let chartData = Array(20).fill(0);
+        let chartAlertData = Array(20).fill(0);
+        let canvas, ctx;
+
+        // Initialize Page
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            connectWebSocket();
+            fetchInitialData();
+        });
+
+        // Initialize HTML5 Canvas Chart
+        function initChart() {
+            canvas = document.getElementById('throughputChart');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            drawChart();
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        function drawChart() {
+            if (!ctx) return;
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let y = padding; y <= height - padding; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            // Draw Throughput Line (Blue)
+            drawLine(chartData, '#3b82f6', 'rgba(59, 130, 246, 0.15)');
+
+            // Draw Alerts Line (Red)
+            drawLine(chartAlertData, '#ef4444', 'rgba(239, 68, 68, 0.15)');
+        }
+
+        function drawLine(data, strokeColor, fillColor) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+            const maxVal = Math.max(10, ...data, ...chartData, ...chartAlertData);
+            const step = (width - padding * 2) / (data.length - 1);
+
+            ctx.beginPath();
+            data.forEach((val, i) => {
+                const x = padding + i * step;
+                const y = height - padding - ((val / maxVal) * (height - padding * 2));
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Fill area
+            ctx.lineTo(width - padding, height - padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.closePath();
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+        }
+
+        function updateChart(packets, alerts) {
+            chartData.shift();
+            chartData.push(packets);
+            chartAlertData.shift();
+            chartAlertData.push(alerts);
+            drawChart();
+        }
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/live`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket Connected');
+                document.getElementById('ws-status').style.color = 'var(--accent-emerald)';
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleTelemetryUpdate(data);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket Disconnected — retrying in 3s');
+                document.getElementById('ws-status').style.color = 'var(--accent-red)';
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        function handleTelemetryUpdate(data) {
+            if (data.type === 'metrics_tick') {
+                document.getElementById('stat-active-flows').textContent = data.active_flows || 0;
+                document.getElementById('stat-pps').textContent = `${data.pps || 0} /s`;
+                document.getElementById('stat-total-packets').textContent = `${(data.total_packets || 0).toLocaleString()} Packets Processed`;
+                document.getElementById('stat-total-alerts').textContent = data.total_alerts || 0;
+                document.getElementById('stat-incidents').textContent = data.total_incidents || 0;
+                updateChart(data.pps || 0, data.recent_alerts || 0);
+            } else if (data.type === 'incident_created') {
+                showToast(`🚨 New ${data.incident.classification} Incident Detected!`, 'danger');
+                fetchIncidents();
+            } else if (data.type === 'alert_fired') {
+                addAlertToFeed(data.alert);
+            } else if (data.type === 'flows_update') {
+                renderFlowsTable(data.flows);
+            }
+        }
+
+        // Fetch Initial State from REST APIs
+        async function fetchInitialData() {
+            fetchStats();
+            fetchIncidents();
+            fetchFlows();
+            fetchAlerts();
+            checkSimStatus();
+        }
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/dashboard/stats');
+                const data = await res.json();
+                document.getElementById('stat-active-flows').textContent = data.active_flows || 0;
+                document.getElementById('stat-total-alerts').textContent = data.total_alerts || 0;
+                document.getElementById('stat-incidents').textContent = data.total_incidents || 0;
+            } catch (e) {}
+        }
+
+        async function fetchIncidents() {
+            try {
+                const res = await fetch('/api/incidents');
+                const data = await res.json();
+                renderIncidents(data.incidents || []);
+            } catch (e) {}
+        }
+
+        async function fetchFlows() {
+            try {
+                const res = await fetch('/api/flows?limit=15');
+                const data = await res.json();
+                renderFlowsTable(data.flows || []);
+            } catch (e) {}
+        }
+
+        async function fetchAlerts() {
+            try {
+                const res = await fetch('/api/alerts?limit=10');
+                const data = await res.json();
+                const list = data.alerts || [];
+                list.forEach(addAlertToFeed);
+            } catch (e) {}
+        }
+
+        async function checkSimStatus() {
+            try {
+                const res = await fetch('/api/simulator/status');
+                const data = await res.json();
+                isSimulating = data.running;
+                updateSimButtonUI();
+            } catch (e) {}
+        }
+
+        // Render Incidents
+        function renderIncidents(incidents) {
+            const container = document.getElementById('incidents-list');
+            document.getElementById('incidents-count-badge').textContent = `${incidents.length} Active`;
+
+            if (incidents.length === 0) {
+                container.innerHTML = `
+                    <div style="color: var(--text-dim); text-align: center; padding: 2rem; font-size: 0.85rem;">
+                        No incidents detected yet. Inject an attack above to trigger multi-signal correlation!
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = incidents.map(inc => `
+                <div class="incident-card">
+                    <div class="incident-top">
+                        <span class="incident-id">INCIDENT #${inc.id.substring(0, 8)}</span>
+                        <span class="severity-badge severity-${inc.classification}">${inc.classification} (Score: ${inc.threat_score})</span>
+                    </div>
+                    <div class="incident-body">
+                        <div><strong>Target IP:</strong> ${inc.dst_ip || '10.0.0.15'}</div>
+                        <div><strong>Timeline:</strong> ${new Date(inc.timeline_start * 1000).toLocaleTimeString()} — ${new Date(inc.timeline_end * 1000).toLocaleTimeString()}</div>
+                        <div class="alert-tags">
+                            ${(inc.alert_ids || []).map(id => `<span class="alert-tag">ALERT #${id.substring(0, 6)}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="incident-actions">
+                        <button class="btn btn-warning" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="acknowledgeIncident('${inc.id}')">
+                            ✓ Acknowledge
+                        </button>
+                        <a class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; text-decoration: none;" href="/api/incidents/${inc.id}/export" download>
+                            📥 Export JSON
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Flows Table
+        function renderFlowsTable(flows) {
+            const tbody = document.getElementById('flows-table-body');
+            if (!flows || flows.length === 0) return;
+
+            tbody.innerHTML = flows.map(f => `
+                <tr>
+                    <td style="color: var(--text-main); font-weight: 600;">
+                        ${f.src_ip}:${f.src_port} → ${f.dst_ip}:${f.dst_port}
+                    </td>
+                    <td>${f.protocol === 6 ? 'TCP' : f.protocol === 17 ? 'UDP' : f.protocol}</td>
+                    <td>${f.packet_count}</td>
+                    <td>${f.byte_count.toLocaleString()} B</td>
+                    <td><span style="color: ${f.state === 'active' ? 'var(--accent-emerald)' : 'var(--text-dim)'};">${f.state}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Add Alert to Feed
+        function addAlertToFeed(alert) {
+            const feed = document.getElementById('alerts-feed');
+            if (feed.children.length === 1 && feed.children[0].innerText.includes('Monitoring')) {
+                feed.innerHTML = '';
+            }
+
+            const item = document.createElement('div');
+            item.className = `feed-item ${alert.detector_type}`;
+            item.innerHTML = `
+                <div>
+                    <strong>[${alert.detector_type.toUpperCase()}]</strong> ${alert.feature_name || 'Deviation'} detected
+                </div>
+                <div class="feed-time">${new Date((alert.timestamp || Date.now()/1000) * 1000).toLocaleTimeString()}</div>
+            `;
+            feed.prepend(item);
+
+            if (feed.children.length > 12) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        // Demo Actions
+        async function toggleSimulation() {
+            if (isSimulating) {
+                await fetch('/api/simulator/stop', { method: 'POST' });
+                isSimulating = false;
+                showToast('Traffic simulation stopped', 'info');
+            } else {
+                await fetch('/api/simulator/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ pps: 50.0 })
+                });
+                isSimulating = true;
+                showToast('Traffic simulation started (50 pkts/s)', 'info');
+            }
+            updateSimButtonUI();
+        }
+
+        function updateSimButtonUI() {
+            const label = document.getElementById('sim-label');
+            const icon = document.getElementById('sim-icon');
+            const btn = document.getElementById('btn-toggle-sim');
+
+            if (isSimulating) {
+                label.textContent = 'Pause Traffic';
+                icon.textContent = '⏸';
+                btn.className = 'btn btn-danger';
+            } else {
+                label.textContent = 'Start Traffic';
+                icon.textContent = '▶';
+                btn.className = 'btn btn-primary';
+            }
+        }
+
+        async function injectAttack(type) {
+            if (!isSimulating) {
+                await toggleSimulation();
+            }
+
+            showToast(`Injecting attack: ${type.replace('_', ' ').toUpperCase()}...`, 'warning');
+            
+            try {
+                const res = await fetch('/api/simulator/inject-attack', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ attack_type: type })
+                });
+                const data = await res.json();
+                
+                if (data.attack_type) {
+                    showToast(`Successfully injected ${data.packets_injected} attack packets!`, 'info');
+                    setTimeout(fetchIncidents, 1500);
+                    setTimeout(fetchAlerts, 1000);
+                }
+            } catch (e) {
+                showToast('Error injecting attack', 'danger');
+            }
+        }
+
+        async function acknowledgeIncident(id) {
+            try {
+                await fetch(`/api/incidents/${id}/acknowledge`, { method: 'POST' });
+                showToast(`Incident #${id.substring(0,6)} Acknowledged`, 'info');
+                fetchIncidents();
+            } catch (e) {}
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderColor = type === 'danger' ? 'var(--accent-red)' : type === 'warning' ? 'var(--accent-amber)' : 'var(--accent-blue)';
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# AegisDiode Backend Dependencies
+# Core Framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+websockets==14.1
+pydantic==2.10.4
+
+# Packet Processing
+scapy==2.6.1
+
+# Analytics & Statistics
+numpy==2.2.1
+pandas==2.2.3
+scipy==1.15.0
+
+# Database
+aiosqlite==0.20.0
+
+# Utilities
+python-dateutil==2.9.0

@@ -1,0 +1,1 @@
+# AegisDiode Detectors Package
