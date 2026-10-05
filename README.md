@@ -1,4 +1,3 @@
-
 <p align="center">
   <img src="docs/assets/aegisdiode-logo.svg" alt="AegisDiode Logo" width="120" />
 </p>
@@ -11,21 +10,21 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#tech-stack">Tech Stack</a> •
-  <a href="#features">Features</a> •
-  <a href="#demo">Demo</a> •
+  <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#architecture">Architecture</a> &bull;
+  <a href="#tech-stack">Tech Stack</a> &bull;
+  <a href="#features">Features</a> &bull;
+  <a href="#demo">Demo</a> &bull;
   <a href="#deployment">Deployment</a>
 </p>
 
 ---
 
-## 🎯 Problem Statement
+## Problem Statement
 
-> **SIH 2025 — Problem Statement ID: SIH26145**
-> *Theme: AI-Based Detection of Cyber Threats in Unidirectional IP Traffic*
-> **Team: Hexagonal Hive**
+> **Smart India Hackathon 2026 — Problem Statement ID: SIH26145**
+> *Theme: Blockchain & Cybersecurity | Category: Software*
+> **Team: Hexagonal Hive (ID: 172598)**
 
 Traditional network security tools (IDS/IPS, firewalls) rely on **bidirectional TCP handshakes** and **conversation state** to detect threats. In **unidirectional networks** (data diodes) used by critical infrastructure (power grids, defense, NTRO), there is **no return path** — making conventional tools useless.
 
@@ -33,122 +32,119 @@ Traditional network security tools (IDS/IPS, firewalls) rely on **bidirectional 
 
 ---
 
-## ✨ Features
+## Features
 
 ### Core Innovations
 
 | Feature | Description |
 |---|---|
-| **🔒 Zero-Trust Hardware Safety** | Software-enforced receive-only engine (`TX=0`) guarantees physical unidirectional security |
-| **🔄 Observation Flow Keying** | Groups unidirectional traffic using **5-Tuple + Time Windows** (60s active / 15s idle) |
-| **📊 Statistical Feature Extraction** | Measures **Inter-Arrival Time (IAT)**, packet sizes, and **Shannon Entropy** directly from metadata |
-| **🛡️ Anti-Poison Baselines** | Rolling statistical filters with **drift-rejection median** updates prevent baseline manipulation |
-| **🔗 Multi-Signal Fusion** | Fuses isolated anomalies into **correlated incident timelines** — eliminates alert fatigue |
-| **📋 Auditable Threat Scoring** | Deterministic scoring logic exports compact **JSON incident reports** for offline SOC analysis |
-| **⚡ Zero Gap Initialization** | Initializes tracking on the **first seen packet**, bypassing missing SYN/ACK handshakes |
+| **Zero-Trust Hardware Safety** | Software-enforced receive-only engine (`TX=0`) guarantees physical unidirectional security |
+| **Observation Flow Keying** | Groups unidirectional traffic using **5-Tuple + Time Windows** (60s active / 15s idle) |
+| **Statistical Feature Extraction** | Measures **Inter-Arrival Time (IAT)**, packet sizes, and **Shannon Entropy** directly from metadata |
+| **JA4+ Protocol Fingerprinting** | Passive TLS/QUIC session categorization from metadata without payload decryption |
+| **Welch FFT Beaconing Detection** | Power Spectral Density analysis of IAT series to detect C2 callback periodicity |
+| **Anti-Poison Baselines** | Rolling statistical filters with **drift-rejection median** updates prevent baseline manipulation |
+| **Multi-Signal Fusion** | Fuses isolated anomalies into **correlated incident timelines** — eliminates alert fatigue |
+| **6-Vector Auditable Scoring** | Deterministic scoring across IAT, size, entropy, flow-rate, JA4+, and beacon dimensions |
+| **STIX 2.1 / JSON-LD Export** | Standardized incident schema with MITRE ATT&CK tactic mapping for air-gapped SOC analysis |
+| **Zero Gap Initialization** | Initializes tracking on the **first seen packet**, bypassing missing SYN/ACK handshakes |
 
 ### Paradigm Shift
 
 ```
-Traditional IDS:  Conversation State  →  Requires bidirectional traffic  →  ❌ Fails on data diodes
-AegisDiode:       Observable Behavior  →  Works with receive-only traffic →  ✅ Designed for data diodes
+Traditional IDS:  Conversation State  →  Requires bidirectional traffic  →  Fails on data diodes
+AegisDiode:       Observable Behavior  →  Works with receive-only traffic →  Designed for data diodes
 ```
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    AEGISDIODE PIPELINE                          │
-│                                                                 │
-│  ┌──────────────────┐                                          │
-│  │ Raw Unidirectional│                                          │
-│  │     Traffic       │                                          │
-│  └────────┬─────────┘                                          │
-│           ▼                                                     │
-│  ┌──────────────────┐    ┌─────────────────────────────────┐   │
-│  │  AF_PACKET Ring   │    │  TECH STACK                     │   │
-│  │  Buffer (TX=0)    │    │                                 │   │
-│  └────────┬─────────┘    │  Ingestion:  Python + Scapy     │   │
-│           ▼              │  Analytics:  NumPy, Pandas       │   │
-│  ┌──────────────────┐    │  Database:   SQLite              │   │
-│  │  Flow Keying:     │    │  API:        FastAPI + WebSocket │   │
-│  │  5-Tuple + Timers │    │  Dashboard:  React 18           │   │
-│  └────────┬─────────┘    │  Deploy:     Docker Compose      │   │
-│           ▼              │                                 │   │
-│  ┌──────────────────┐    └─────────────────────────────────┘   │
-│  │ Feature Extraction│                                          │
-│  │ IAT·Sizes·Entropy │                                          │
-│  └────────┬─────────┘                                          │
-│           ▼                                                     │
-│  ┌──────────────────┐                                          │
-│  │  Multi-Signal     │                                          │
-│  │  Correlation      │                                          │
-│  └────────┬─────────┘                                          │
-│           ▼                                                     │
-│  ┌──────────────────┐                                          │
-│  │ Incident Timeline │                                          │
-│  │  (JSON Export)    │                                          │
-│  └──────────────────┘                                          │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│              AEGISDIODE — PASSIVE UNIDIRECTIONAL THREAT PIPELINE        │
+│                                                                         │
+│  ┌──────────────────────────┐                                           │
+│  │ Raw Unidirectional        │  Input from hardware-enforced             │
+│  │ Traffic Mirror            │  Data Diode tap (TX=0)                    │
+│  └────────────┬─────────────┘                                           │
+│               ▼                                                         │
+│  ┌──────────────────────────┐                                           │
+│  │ AF_PACKET Ring Buffer     │  Zero-copy ingestion in                   │
+│  │ (TX=0)                    │  receive-only mode                        │
+│  └────────────┬─────────────┘                                           │
+│               ▼                                                         │
+│  ┌──────────────────────────┐                                           │
+│  │ Stateless Flow Keyer      │  5-Tuple + Time Windows                   │
+│  │                           │  micro (100ms) to macro (60s)             │
+│  └────────────┬─────────────┘                                           │
+│               ▼                                                         │
+│  ┌──────────────────────────┐                                           │
+│  │ Deep Packet Anomalies &   │  IAT, Sizes, Shannon Entropy,             │
+│  │ Protocol Fingerprinting   │  JA4+ Fingerprinting                      │
+│  └────────────┬─────────────┘                                           │
+│               ▼                                                         │
+│  ┌──────────────────────────┐                                           │
+│  │ Correlation & Scoring     │  6-vector deterministic scoring            │
+│  │ Engine                    │  + multi-signal fusion                     │
+│  └────────────┬─────────────┘                                           │
+│               ▼                                                         │
+│  ┌──────────────────────────┐                                           │
+│  │ Actionable Incident       │  STIX 2.1 / JSON-LD Schema                │
+│  │ Timeline                  │  MITRE ATT&CK tactic mapping              │
+│  └──────────────────────────┘                                           │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Pipeline Stages
 
-1. **Packet Capture** — Ingests raw unidirectional packets via receive-only socket (simulated via PCAP replay in demo mode)
-2. **Flow Keying** — Groups packets into observation flows using `(src_ip, dst_ip, src_port, dst_port, protocol)` + active/idle timers
-3. **Feature Extraction** — Computes per-flow statistics: IAT distribution, packet size histogram, Shannon entropy of payload bytes
-4. **Baseline Engine** — Maintains rolling statistical baselines with drift-rejection to prevent slow poisoning attacks
-5. **Anomaly Detection** — Multi-detector system: IAT anomaly, size anomaly, entropy anomaly, flow-rate anomaly
-6. **Correlation Engine** — Fuses individual detector alerts using time-windowed multi-signal fusion
-7. **Incident Timeline** — Produces actionable, auditable JSON reports for SOC analysts
+1. **Packet Capture** — Ingests raw unidirectional packets via `AF_PACKET` ring buffers in receive-only mode (TX=0). Demo uses PCAP replay via Scapy.
+2. **Flow Keying** — Groups packets into observation flows using `(src_ip, dst_ip, src_port, dst_port, protocol)` + active/idle timers (60s/15s). Zero-gap initialization on first packet.
+3. **Feature Extraction** — Computes per-flow statistics: IAT distribution, packet size histogram, Shannon entropy, JA4+ TLS fingerprints.
+4. **Baseline Engine** — Maintains rolling statistical baselines with drift-rejection median filter to prevent slow poisoning attacks.
+5. **Anomaly Detection** — Multi-detector system: IAT, size, entropy, flow-rate, JA4+ suspicion, Welch FFT beaconing.
+6. **Correlation Engine** — Time-windowed multi-signal fusion with deterministic 6-vector threat scoring and MITRE ATT&CK tactic classification.
+7. **Incident Timeline** — Produces actionable, auditable STIX 2.1 / JSON-LD incident reports for SOC analysts.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| **Ingestion Engine** | Python 3.11 + Scapy | Packet capture & parsing (demo uses PCAP replay) |
-| **Analytics & Baselines** | NumPy, Pandas, SciPy | Statistical feature extraction & anomaly detection |
-| **Data Persistence** | SQLite | Lightweight embedded database for flows, alerts, baselines |
+| **Ingestion Engine** | Python 3.11 + Scapy (prod: Go 1.22 + AF_PACKET) | Packet capture in receive-only mode |
+| **Analytics & Baselines** | NumPy, SciPy, Statistics | Statistical features, Shannon entropy, Welch FFT PSD |
+| **Protocol Analysis** | Custom JA4+ implementation | Passive TLS/QUIC fingerprinting |
+| **Data Persistence** | SQLite | Lightweight embedded database (air-gap compatible) |
+| **Threat Intelligence** | STIX 2.1 / JSON-LD, MITRE ATT&CK | Standardized incident export & tactic mapping |
 | **API Server** | FastAPI + WebSockets | Real-time SOC interface with REST + streaming |
-| **Dashboard** | React 18 + Recharts | Real-time threat visualization & incident management |
+| **Dashboard** | React 18 + TypeScript + Recharts | Real-time threat visualization & incident management |
 | **Deployment** | Docker + Docker Compose | Single-command deployment on commodity hardware |
 
-> **Note on Go**: The production architecture specifies Go 1.22 + AF_PACKET for the ingestion engine. This demo prototype uses Python + Scapy for faster development while maintaining identical pipeline semantics.
+> **Production Architecture:** The target specifies Go 1.22 + AF_PACKET with eBPF/XDP for the ingestion engine, targeting 10 Gbps / 100K flows/sec / <5ms latency / <512 MB RAM. This demo prototype uses Python with identical pipeline semantics.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
 - Node.js 18+ & npm
-- Docker & Docker Compose (optional, for containerized deployment)
+- Docker & Docker Compose (optional)
 
 ### Option 1: Local Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/hexagonal-hive/aegisdiode.git
-cd aegisdiode
-
-# Backend setup
+# Backend
 cd backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-
-# Initialize the database
 python -m aegisdiode.db.init
-
-# Start the API server (includes packet processing pipeline)
 uvicorn aegisdiode.api.main:app --host 0.0.0.0 --port 8000 --reload
 
-# Frontend setup (new terminal)
+# Frontend (new terminal)
 cd frontend
 npm install
 npm run dev
@@ -160,164 +156,172 @@ npm run dev
 docker-compose up --build
 ```
 
-Access the dashboard at: **http://localhost:5173**
-API documentation at: **http://localhost:8000/docs**
+- Dashboard: **http://localhost:5173**
+- API docs: **http://localhost:8000/docs**
 
 ---
 
-## 🎮 Demo
+## Demo
 
-The demo prototype includes a **traffic simulator** that generates realistic unidirectional network traffic with injected attack patterns:
+The demo includes a **traffic simulator** that generates realistic unidirectional network traffic with injected attack patterns:
 
 ```bash
-# Run the traffic simulator with attack injection
+# Mixed traffic with random attack injection
 python -m aegisdiode.simulator.traffic_gen --mode mixed --duration 300
 
-# Available attack scenarios:
-#   --attack port_scan      Port scanning pattern
-#   --attack data_exfil     Data exfiltration (unusual entropy)
-#   --attack dos_flood       Volumetric DoS pattern
-#   --attack slow_poison     Gradual baseline poisoning attempt
-#   --attack beaconing       C2 beaconing pattern (periodic callbacks)
+# Specific attack scenarios
+python -m aegisdiode.simulator.traffic_gen --attack port_scan
+python -m aegisdiode.simulator.traffic_gen --attack data_exfil
+python -m aegisdiode.simulator.traffic_gen --attack dos_flood
+python -m aegisdiode.simulator.traffic_gen --attack slow_poison
+python -m aegisdiode.simulator.traffic_gen --attack beaconing
 ```
 
-### Demo Scenarios
+### Attack Detection Scenarios
 
-| Scenario | What It Shows |
-|---|---|
-| **Port Scan Detection** | Flow-rate anomaly detector fires, correlated with IAT anomaly |
-| **Data Exfiltration** | Entropy anomaly + size anomaly trigger multi-signal fusion |
-| **DoS Flood** | IAT + flow-rate anomalies fuse into a single high-severity incident |
-| **Baseline Poisoning** | Drift-rejection filter blocks gradual baseline manipulation |
-| **C2 Beaconing** | IAT regularity anomaly detects periodic callback patterns |
+| Scenario | Detectors Triggered | MITRE ATT&CK |
+|---|---|---|
+| **Port Scan** | Flow-rate + IAT anomaly fused into incident | Reconnaissance (TA0043) / T1046 |
+| **Data Exfiltration** | Entropy + size anomaly multi-signal fusion | Exfiltration (TA0010) / T1041 |
+| **DoS Flood** | IAT + flow-rate fused high-severity incident | Impact (TA0040) / T1498 |
+| **Baseline Poisoning** | Drift-rejection filter blocks manipulation | Defense Evasion (TA0005) / T1070 |
+| **C2 Beaconing** | Welch FFT PSD detects periodic callbacks | Command & Control (TA0011) / T1071 |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 aegisdiode/
 ├── backend/
 │   ├── aegisdiode/
-│   │   ├── __init__.py
-│   │   ├── capture/              # Packet capture & ingestion
-│   │   │   ├── __init__.py
-│   │   │   ├── packet_reader.py  # PCAP reader / live capture
-│   │   │   └── ring_buffer.py    # Circular buffer (AF_PACKET sim)
-│   │   ├── flows/                # Flow keying & management
-│   │   │   ├── __init__.py
-│   │   │   ├── flow_tracker.py   # 5-tuple flow tracking
-│   │   │   └── flow_table.py     # Active/idle timer management
-│   │   ├── features/             # Statistical feature extraction
-│   │   │   ├── __init__.py
-│   │   │   ├── iat.py            # Inter-Arrival Time analysis
-│   │   │   ├── size_stats.py     # Packet size statistics
-│   │   │   └── entropy.py        # Shannon entropy computation
-│   │   ├── baselines/            # Anti-poison baseline engine
-│   │   │   ├── __init__.py
-│   │   │   ├── rolling_stats.py  # Rolling statistical baselines
-│   │   │   └── drift_reject.py   # Drift-rejection median filter
-│   │   ├── detectors/            # Anomaly detection modules
-│   │   │   ├── __init__.py
-│   │   │   ├── iat_detector.py   # IAT anomaly detector
-│   │   │   ├── size_detector.py  # Size anomaly detector
+│   │   ├── config.py              # Global configuration
+│   │   ├── capture/               # Packet capture & ingestion
+│   │   │   ├── packet_reader.py   # PCAP reader / live capture
+│   │   │   └── ring_buffer.py     # Circular buffer (AF_PACKET sim)
+│   │   ├── flows/                 # Flow keying & management
+│   │   │   ├── flow_tracker.py    # 5-tuple + zero-gap initialization
+│   │   │   └── flow_table.py      # Active/idle timer management
+│   │   ├── features/              # Statistical feature extraction
+│   │   │   ├── iat.py             # Inter-Arrival Time analysis
+│   │   │   ├── size_stats.py      # Packet size statistics
+│   │   │   ├── entropy.py         # Shannon entropy computation
+│   │   │   └── ja4_fingerprint.py # JA4+ passive TLS fingerprinting
+│   │   ├── baselines/             # Anti-poison baseline engine
+│   │   │   ├── rolling_stats.py   # Rolling statistical baselines
+│   │   │   └── drift_reject.py    # Drift-rejection median filter
+│   │   ├── detectors/             # Anomaly detection modules
+│   │   │   ├── iat_detector.py    # IAT anomaly detector
+│   │   │   ├── size_detector.py   # Size anomaly detector
 │   │   │   ├── entropy_detector.py # Entropy anomaly detector
-│   │   │   └── rate_detector.py  # Flow-rate anomaly detector
-│   │   ├── correlation/          # Multi-signal fusion engine
-│   │   │   ├── __init__.py
-│   │   │   ├── fusion.py         # Time-windowed signal fusion
-│   │   │   └── scoring.py        # Deterministic threat scoring
-│   │   ├── incidents/            # Incident timeline management
-│   │   │   ├── __init__.py
-│   │   │   ├── timeline.py       # Incident timeline builder
-│   │   │   └── exporter.py       # JSON report exporter
-│   │   ├── db/                   # Database layer
-│   │   │   ├── __init__.py
-│   │   │   ├── init.py           # Schema initialization
-│   │   │   ├── models.py         # SQLite models
-│   │   │   └── repository.py     # Data access layer
-│   │   ├── api/                  # FastAPI server
-│   │   │   ├── __init__.py
-│   │   │   ├── main.py           # App entry point
-│   │   │   ├── routes/           # REST endpoints
-│   │   │   │   ├── flows.py
-│   │   │   │   ├── alerts.py
-│   │   │   │   ├── incidents.py
-│   │   │   │   └── dashboard.py
-│   │   │   └── websocket.py      # Real-time WebSocket handler
-│   │   └── simulator/            # Demo traffic generator
-│   │       ├── __init__.py
-│   │       ├── traffic_gen.py    # Synthetic traffic generator
+│   │   │   ├── rate_detector.py   # Flow-rate anomaly detector
+│   │   │   └── beacon_detector.py # Welch FFT C2 beaconing detector
+│   │   ├── correlation/           # Multi-signal fusion engine
+│   │   │   ├── fusion.py          # Time-windowed signal fusion
+│   │   │   ├── scoring.py         # 6-vector threat scoring
+│   │   │   └── mitre_mapping.py   # MITRE ATT&CK tactic mapping
+│   │   ├── incidents/             # Incident timeline management
+│   │   │   ├── timeline.py        # Incident timeline builder
+│   │   │   ├── exporter.py        # JSON report exporter
+│   │   │   └── stix_exporter.py   # STIX 2.1 / JSON-LD export
+│   │   ├── db/                    # Database layer
+│   │   │   ├── init.py            # Schema initialization
+│   │   │   ├── models.py          # SQLite models
+│   │   │   └── repository.py      # Data access layer
+│   │   ├── api/                   # FastAPI server
+│   │   │   ├── main.py            # App entry point
+│   │   │   ├── websocket.py       # Real-time WebSocket handler
+│   │   │   └── routes/            # REST endpoints
+│   │   └── simulator/             # Demo traffic generator
+│   │       ├── traffic_gen.py     # Synthetic traffic generator
 │   │       └── attack_patterns.py # Attack pattern templates
 │   ├── tests/
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   ├── components/
-│   │   │   ├── Dashboard.jsx       # Main SOC dashboard
-│   │   │   ├── FlowTable.jsx       # Active flows table
-│   │   │   ├── ThreatTimeline.jsx  # Incident timeline view
-│   │   │   ├── AnomalyChart.jsx    # Real-time anomaly charts
-│   │   │   ├── BaselineMonitor.jsx # Baseline health monitor
-│   │   │   └── IncidentDetail.jsx  # Incident drill-down
-│   │   ├── hooks/
-│   │   │   └── useWebSocket.js     # WebSocket connection hook
-│   │   └── styles/
+│   │   ├── components/            # SOC dashboard views
+│   │   ├── hooks/                 # WebSocket hooks
+│   │   └── types/                 # API type definitions
 │   ├── package.json
-│   ├── vite.config.js
-│   └── Dockerfile
+│   └── vite.config.ts
 ├── docker-compose.yml
 ├── docs/
-│   ├── assets/
-│   └── ARCHITECTURE.md
-├── sample_data/                    # Sample PCAP files for demo
+├── sample_data/                   # Sample PCAP files for demo
 ├── README.md
-└── IMPLEMENTATION_PLAN.md
+├── IMPLEMENTATION.md
+└── AGENT.md
 ```
 
 ---
 
-## 📊 SOC Dashboard
+## SOC Dashboard
 
-The real-time dashboard provides SOC analysts with:
+The real-time React dashboard provides SOC analysts with:
 
-- **Live Flow Monitor** — Active observation flows with feature vectors
+- **Live Flow Monitor** — Active observation flows with 6-vector feature scores
 - **Threat Timeline** — Correlated incidents on a visual timeline
 - **Anomaly Heatmap** — Multi-detector signal visualization
-- **Baseline Health** — Rolling baseline status & drift indicators
-- **Incident Reports** — Exportable JSON reports for offline analysis
+- **Baseline Health** — Rolling baseline status & drift-rejection indicators
+- **Beacon Analysis** — Welch FFT Power Spectral Density visualization
+- **Incident Reports** — Exportable STIX 2.1 / JSON-LD reports for air-gapped SOC analysis
+- **MITRE ATT&CK View** — Tactic/technique classification per incident
 
 ---
 
-## 🔐 Security Guarantees
+## Security Guarantees
 
-| Guarantee | How |
+| Guarantee | Mechanism |
 |---|---|
 | **Zero Attack Surface** | Receive-only mode (`TX=0`) — no packets ever transmitted |
 | **Physical Isolation** | Operates behind data diode — cannot breach air gap |
-| **Deterministic Scoring** | No ML black boxes — fully auditable threat scores |
-| **Anti-Poisoning** | Drift-rejection filters prevent gradual baseline manipulation |
-| **Offline Capable** | JSON exports work in fully air-gapped environments |
+| **Deterministic Scoring** | 6-vector auditable scoring — no ML black boxes |
+| **Anti-Poisoning** | Drift-rejection median filter blocks gradual baseline manipulation |
+| **Offline Capable** | STIX 2.1 / JSON-LD exports work in fully air-gapped environments |
+| **No External Dependencies** | Air-gapped compatible — all processing is local |
 
 ---
 
-## 🎯 Target Users
+## Performance Targets (Production)
 
-- **SOC Analysts & Responders** — Fused incident timelines reduce investigation time
-- **Critical Infrastructure** (Power, Defense, NTRO) — Real-time visibility without breaking isolation
-- **Air-Gapped Network Engineers** — Reverse-path telemetry while maintaining zero-trust
+| Metric | Target |
+|---|---|
+| Throughput | 10 Gbps sustained line-rate |
+| Flow capacity | 100,000 flows/sec |
+| Detection latency | < 5 ms bounded streaming |
+| Memory | < 512 MB RAM (statically bounded) |
+| Packet loss | 0% |
 
 ---
 
-## 📜 License
+## Target Users
 
-This project is developed as part of **Smart India Hackathon 2025** by **Team Hexagonal Hive**.
+- **SOC Analysts & Responders** — Fused incident timelines eliminate alert fatigue and cut investigation time
+- **National Security & Defense Enclaves (NTRO)** — Real-time threat intelligence from mirrored optical taps without breaking unidirectional isolation
+- **Air-Gapped Network Engineers** — Reverse-path telemetry while maintaining strict zero-trust enclave isolation
+
+---
+
+## Research & References
+
+### Industry & Kernel Standards
+- **NIST SP 800-82 Rev. 3 & MIT Research (CSIIRW)** — Unidirectional data diode architectures for air-gapped critical infrastructure
+- **Linux Kernel AF_PACKET Interface (PACKET_MMAP / eBPF XDP)** — Zero-copy ring-buffer architectures for multi-gigabit packet inspection
+- **OASIS STIX 2.1 & MITRE ATT&CK Framework** — Standardized schema for threat indicators and tactic mapping (TA0011, TA0043, TA0010)
+
+### Mathematical & Theoretical Foundations
+- **JA4+ Network Fingerprinting (Fox-IT / Althouse, 2023)** — TLS/QUIC session categorization from metadata without payload decryption
+- **Welch FFT Power Spectral Density (IEEE, 1967)** — Botnet C2 beacon detection using IAT frequency analysis
+- **Validation Datasets (CIC-IDS2018 & UNSW-NB15)** — Empirical benchmarks for volumetric DDoS, DGA entropy, and asymmetric exfiltration ratios
+
+---
+
+## License
+
+This project is developed as part of **Smart India Hackathon 2026** by **Team Hexagonal Hive**.
 
 ---
 
 <p align="center">
-  <sub>Built with ❤️ for securing India's critical infrastructure</sub>
+  <sub>Built for securing India's critical infrastructure</sub>
 </p>

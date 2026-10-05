@@ -1,0 +1,21 @@
+{
+  "name": "aegis-diode",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">   <img src=\"docs/assets/aegisdiode-logo.svg\" alt=\"AegisDiode Logo\" width=\"120\" /> </p>",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhiramyakkala10-ay/Aegis-Diode.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/abhiramyakkala10-ay/Aegis-Diode/issues"
+  },
+  "homepage": "https://github.com/abhiramyakkala10-ay/Aegis-Diode#readme"
+}
